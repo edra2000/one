@@ -1,123 +1,136 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>مراقبة العملات الرقمية</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #222;
-    color: #f0f8ff;
-    margin: 0;
-    padding: 20px;
-  }
-  .loading-message, .error-message {
-    text-align: center;
-    font-size: 1.2em;
-    margin-bottom: 20px;
-  }
-  .error-message {
-    color: #ff4d4d;
-  }
-  .crypto-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-  }
-  .crypto-card {
-    background-color: #333;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-  }
-  .symbol {
-    font-size: 1.2em;
-    font-weight: bold;
-  }
-  .price {
-    font-size: 1.1em;
-    margin: 8px 0;
-  }
-  .change {
-    font-weight: bold;
-    margin-bottom: 8px;
-  }
-  .positive {
-    color: #00ff88;
-  }
-  .negative {
-    color: #ff3c3c;
-  }
-  .volume {
-    font-size: 0.9em;
-    margin-top: 8px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مراقبة العملات الرقمية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .loading-message, .error-message {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    .error-message {
+      color: #ff4d4d;
+    }
+    .crypto-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .crypto-card {
+      background-color: #333;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .crypto-card:hover {
+      transform: scale(1.05);
+    }
+    .symbol {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .price {
+      font-size: 1.1em;
+      margin: 8px 0;
+    }
+    .change {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .positive {
+      color: #00ff88;
+    }
+    .negative {
+      color: #ff3c3c;
+    }
+    .volume {
+      font-size: 0.9em;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
 
-<div class="loading-message">جار التحميل...</div>
-<div class="error-message" style="display:none;"></div>
-<div class="crypto-grid" style="display:none;"></div>
+  <div class="loading-message">جارٍ تحميل بيانات العملات...</div>
+  <div class="error-message" style="display:none;"></div>
+  <div class="crypto-grid" style="display:none;"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
- const apiUrl = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest';
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const apiUrl = 'http://localhost:3000/api/binance'; // تأكد من تشغيل الخادم
 
-  const gridContainer = document.querySelector('.crypto-grid');
-  const loadingMessage = document.querySelector('.loading-message');
-  const errorMessage = document.querySelector('.error-message');
+      const gridContainer = document.querySelector('.crypto-grid');
+      const loadingMessage = document.querySelector('.loading-message');
+      const errorMessage = document.querySelector('.error-message');
 
-  function displayError(message) {
-    loadingMessage.style.display = 'none';
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block';
-  }
-
-  function fetchAndDisplayData() {
-    fetch(apiUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
+      function displayError(message) {
         loadingMessage.style.display = 'none';
-        gridContainer.style.display = 'grid';
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+      }
 
-        gridContainer.innerHTML = '';
+      function fetchAndDisplayData() {
+        fetch(apiUrl)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            loadingMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            gridContainer.style.display = 'grid';
+            gridContainer.innerHTML = '';
 
-        data.forEach(coin => {
-          const volume = coin.total_volume;
-          const price = coin.current_price;
-          const change = coin.price_change_percentage_24h;
-          const coinId = coin.id;
+            const filtered = data
+              .filter(ticker =>
+                ticker.symbol.endsWith('USDT') &&
+                !ticker.symbol.startsWith('USD') &&
+                parseFloat(ticker.quoteVolume) > 0
+              )
+              .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+              .slice(0, 30);
 
-          const card = document.createElement('div');
-          card.className = 'crypto-card';
-          card.innerHTML = `
-            <div class="symbol">${coin.name}</div>
-            <div class="price">${price.toFixed(2)} USD</div>
-            <div class="change ${change >= 0 ? 'positive' : 'negative'}">
-              ${change.toFixed(2)}%
-            </div>
-            <div class="volume">Vol: ${volume.toLocaleString()}</div>
-          `;
-          gridContainer.appendChild(card);
-        });
-      })
-      .catch(error => {
-        console.error('خطأ في جلب البيانات:', error);
-        displayError("حدث خطأ أثناء جلب البيانات من Binance.");
-      });
-  }
+            filtered.forEach(ticker => {
+              const price = parseFloat(ticker.lastPrice);
+              const change = parseFloat(ticker.priceChangePercent);
+              const volume = parseFloat(ticker.quoteVolume);
+              const symbol = ticker.symbol.replace('USDT', '');
 
-  fetchAndDisplayData();
-  setInterval(fetchAndDisplayData, 10000);
-});
-</script>
+              const card = document.createElement('div');
+              card.className = 'crypto-card';
+              card.innerHTML = `
+                <div class="symbol">${symbol}</div>
+                <div class="price">${price.toFixed(2)} USD</div>
+                <div class="change ${change >= 0 ? 'positive' : 'negative'}">
+                  ${change.toFixed(2)}%
+                </div>
+                <div class="volume">الحجم: ${volume.toLocaleString()}</div>
+              `;
+              gridContainer.appendChild(card);
+            });
+          })
+          .catch(error => {
+            console.error('خطأ في جلب البيانات:', error);
+            displayError("حدث خطأ أثناء جلب البيانات من Binance.");
+          });
+      }
+
+      fetchAndDisplayData();
+      setInterval(fetchAndDisplayData, 10000);
+    });
+  </script>
 
 </body>
 </html>
