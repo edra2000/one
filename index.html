@@ -129,7 +129,7 @@
         card.innerHTML = `
           <img src="${getLogoUrl(baseSymbol)}" alt="${baseSymbol}" class="logo" onerror="this.style.display='none'">
           <div class="symbol">${baseSymbol}</div>
-          <div class="price">${price.toFixed(2)} USD</div>
+          <div class="price">${price.toFixed(2)} USDT</div>
           <div class="change ${change >= 0 ? 'positive' : 'negative'}">${change.toFixed(2)}%</div>
           <div class="liquidity-bar"><div class="liquidity-fill" style="width: ${liquidityPercent * 100}%"></div></div>
           <div class="volume">Vol: ${volume.toLocaleString()}</div>
