@@ -91,8 +91,3 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('فشل في جلب البيانات من Binance:', error);
         displayError('حدث خطأ أثناء تحميل بيانات Binance.');
       });
-  }
-
-  fetchAndDisplayData();
-  setInterval(fetchAndDisplayData, 10000);
-});
