@@ -1,20 +1,28 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عرض العملات - OKX</title>
-  <link rel="stylesheet" href="style.css">
+  <title>عرض العملات</title>
 </head>
 <body>
+  <div id="crypto-container"></div>
 
-<div class="loading-message">جارٍ تحميل البيانات من OKX...</div>
-<div class="error-message" style="display: none;"></div>
-<div class="crypto-grid" style="display: none;"></div>
+  <script>
+    const apiUrl = 'https://api.coincap.io/v2/assets';
 
-<script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script> <!-- مكتبة رسم الدوائر -->
-  <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script> 
-<script src="script.js"></script>
-
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('crypto-container');
+        data.data.slice(0, 10).forEach(asset => {
+          const div = document.createElement('div');
+          div.textContent = `${asset.name} (${asset.symbol}): ${parseFloat(asset.priceUsd).toFixed(2)} USD`;
+          container.appendChild(div);
+        });
+      })
+      .catch(error => {
+        console.error('حدث خطأ أثناء جلب البيانات:', error);
+      });
+  </script>
 </body>
 </html>
