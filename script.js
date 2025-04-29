@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function drawCircle(retries = 10) {
               const container = document.getElementById(containerId);
               if (container) {
-                const percent = Math.min(1, parseFloat(ticker.vol24h) / 100000000);
+                const percent = Math.max(0.01, Math.min(1, parseFloat(ticker.vol24h) / 100000000));
                 const circle = new ProgressBar.Circle(container, {
                   color: '#00ff88',
                   trailColor: '#444',
