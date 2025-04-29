@@ -38,17 +38,21 @@ document.addEventListener('DOMContentLoaded', function () {
           const liquidityPercent = Math.min(1, volume / 100000000);
           const containerId = `liquidity-${symbol}`;
 
-          const card = document.createElement('div');
-          card.className = 'crypto-card';
-          card.innerHTML = `
-            <div class="symbol">${symbol}</div>
-            <div class="price">${price.toFixed(2)} USD</div>
-            <div class="change ${change >= 0 ? 'positive' : 'negative'}">
-              ${change.toFixed(2)}%
-            </div>
-            <div class="liquidity-chart" id="${containerId}"></div>
-            <div class="volume">Vol: ${volume.toLocaleString()}</div>
-          `;
+         const logoUrl = `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png`;
+const card = document.createElement('div');
+card.className = 'crypto-card';
+card.innerHTML = `
+  <div class="symbol">
+    <img src="${logoUrl}" alt="${coin.name}" style="width:24px;height:24px;vertical-align:middle;margin-right:5px;" />
+    ${coin.name} (${coin.symbol})
+  </div>
+  <div class="price">${price.toFixed(2)} USD</div>
+  <div class="change ${change >= 0 ? 'positive' : 'negative'}">
+    ${change.toFixed(2)}%
+  </div>
+  <div class="volume">Vol: ${volume.toLocaleString()}</div>
+`;
+
 
           gridContainer.appendChild(card);
 
