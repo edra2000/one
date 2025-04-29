@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const errorMessage = document.querySelector('.error-message');
 
   function displayError(message) {
+    .then(data => {
+  console.log('بيانات العملات:', data);
+  // باقي الكود
+})
+
     loadingMessage.style.display = 'none';
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
