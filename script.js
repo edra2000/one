@@ -28,9 +28,10 @@ function drawCircle(retries = 10) {
 
     circle.animate(percent);
   } else if (retries > 0) {
-    console.warn(`⏳ محاولة جديدة لإيجاد العنصر: ${containerId} (محاولات متبقية: ${retries})`);
+    // إعادة المحاولة إذا لم يتم العثور على العنصر
     setTimeout(() => drawCircle(retries - 1), 100);
   } else {
-    console.error(`❌ فشل في إيجاد العنصر: ${containerId} بعد عدة محاولات.`);
+    // عرض رسالة خطأ واضحة
+    console.error(`❌ العنصر ${containerId} غير موجود في الصفحة بعد محاولات متعددة.`);
   }
 }
