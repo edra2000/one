@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             gridContainer.appendChild(card);
 
+            // نرسم مؤشر السيولة بعد التحقق من العنصر فعلياً
             const containerId = `liquidity-${coinId}`;
-            const container = document.getElementById(containerId);
 
-            // ننتظر قليلاً للتأكد من أن العنصر أنشئ
-            setTimeout(() => {
+            function waitForContainerAndRender(retries = 10) {
+              const container = document.getElementById(containerId);
               if (container) {
                 const percent = Math.min(1, parseFloat(ticker.vol24h) / 100000000);
                 const circle = new ProgressBar.Circle(container, {
@@ -95,8 +95,14 @@ document.addEventListener('DOMContentLoaded', function () {
                   }
                 });
                 circle.animate(percent);
+              } else if (retries > 0) {
+                setTimeout(() => waitForContainerAndRender(retries - 1), 100);
+              } else {
+                console.warn(`❗ لم يتم العثور على العنصر: ${containerId}`);
               }
-            }, 50);
+            }
+
+            waitForContainerAndRender(); // تشغيل رسم الدائرة بعد التأكد
           });
         } else {
           displayError("لا توجد بيانات أسعار من OKX.");
@@ -109,5 +115,5 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   fetchAndDisplayData();
-  setInterval(fetchAndDisplayData, 10000); // كل 10 ثواني
+  setInterval(fetchAndDisplayData, 10000); // تحديث كل 10 ثواني
 });
