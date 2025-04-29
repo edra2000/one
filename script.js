@@ -1,8 +1,31 @@
-function drawCircle(containerId, retries = 10) {
-  const container = document.getElementById(containerId);
+// ... (الكود الأصلي حتى filteredCoins)
 
-  if (container) {
-    const percent = Math.max(0.01, Math.min(1, parseFloat(ticker.vol24h) / 100000000));
+// احسب أعلى حجم تداول
+const maxVol24h = Math.max(...filteredCoins.map(t => parseFloat(t.vol24h)) || 1; // تجنب القسمة على صفر
+
+sortedCoins.forEach(ticker => {
+  const changeValue = parseFloat(ticker.change24h) || 0;
+  const coinId = ticker.instId.replace(/[^a-zA-Z0-9]/g, '');
+  const containerId = `liquidity-${coinId}`;
+
+  const card = document.createElement('div');
+  card.className = 'crypto-card';
+  card.innerHTML = `
+    <div class="symbol">${ticker.instId.split('-')[0]}</div>
+    <div class="price">${parseFloat(ticker.last).toFixed(2)} USD</div>
+    <div class="change ${changeValue >= 0 ? 'positive' : 'negative'}">
+      ${changeValue.toFixed(2)}%
+    </div>
+    <div class="liquidity-chart" id="${containerId}"></div>
+    <div class="volume">Vol: ${parseFloat(ticker.vol24h).toLocaleString()}</div>
+  `;
+  gridContainer.appendChild(card);
+
+  function drawCircle() {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const percent = parseFloat(ticker.vol24h) / maxVol24h;
     const circle = new ProgressBar.Circle(container, {
       color: '#00ff88',
       trailColor: '#444',
@@ -10,28 +33,16 @@ function drawCircle(containerId, retries = 10) {
       duration: 1400,
       easing: 'easeInOut',
       strokeWidth: 6,
-      text: {
-        autoStyleContainer: false
-      },
       from: { color: '#00ff88' },
       to: { color: '#ff3c3c' },
-      step: function (state, circle) {
+      step: (state, circle) => {
         circle.path.setAttribute('stroke', state.color);
-        const value = Math.round(circle.value() * 100);
-        if (!circle.text) return;
-        circle.setText(value + '%');
+        circle.setText(Math.round(circle.value() * 100) + '%');
       }
     });
 
-    circle.text.style.fontFamily = '"Arial", sans-serif';
-    circle.text.style.fontSize = '16px';
-    circle.text.style.fill = '#f0f8ff';
-
     circle.animate(percent);
-  } else if (retries > 0) {
-    // إعادة المحاولة بعد وقت انتظار قصير
-    setTimeout(() => drawCircle(containerId, retries - 1), 100);
-  } else {
-    console.error(`❌ العنصر ${containerId} غير موجود في DOM بعد عدة محاولات.`);
   }
-}
+
+  drawCircle();
+});
