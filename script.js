@@ -72,25 +72,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
             gridContainer.appendChild(card);
 
-            // هنا يتم رسم مؤشر السيولة بعد إنشاء العنصر
-            const container = document.getElementById(`liquidity-${coinId}`);
-            const percent = Math.min(1, parseFloat(ticker.vol24h) / 100000000); // سيولة 100M = 100%
-            const circle = new ProgressBar.Circle(container, {
-              color: '#00ff88',
-              trailColor: '#444',
-              trailWidth: 2,
-              duration: 1400,
-              easing: 'easeInOut',
-              strokeWidth: 6,
-              from: { color: '#00ff88' },
-              to: { color: '#ff3c3c' },
-              step: (state, circle) => {
-                circle.path.setAttribute('stroke', state.color);
-                const val = Math.round(circle.value() * 100);
-                circle.setText(val + '%');
+            const containerId = `liquidity-${coinId}`;
+            const container = document.getElementById(containerId);
+
+            // ننتظر قليلاً للتأكد من أن العنصر أنشئ
+            setTimeout(() => {
+              if (container) {
+                const percent = Math.min(1, parseFloat(ticker.vol24h) / 100000000);
+                const circle = new ProgressBar.Circle(container, {
+                  color: '#00ff88',
+                  trailColor: '#444',
+                  trailWidth: 2,
+                  duration: 1400,
+                  easing: 'easeInOut',
+                  strokeWidth: 6,
+                  from: { color: '#00ff88' },
+                  to: { color: '#ff3c3c' },
+                  step: (state, circle) => {
+                    circle.path.setAttribute('stroke', state.color);
+                    const val = Math.round(circle.value() * 100);
+                    circle.setText(val + '%');
+                  }
+                });
+                circle.animate(percent);
               }
-            });
-            circle.animate(percent);
+            }, 50);
           });
         } else {
           displayError("لا توجد بيانات أسعار من OKX.");
@@ -103,5 +109,5 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   fetchAndDisplayData();
-  setInterval(fetchAndDisplayData, 10000); // تحديث كل 10 ثواني
+  setInterval(fetchAndDisplayData, 10000); // كل 10 ثواني
 });
