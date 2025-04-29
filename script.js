@@ -1,44 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // 1. استخدم خدمة وسيطة لتجاوز CORS
-  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-  const apiUrl = 'https://www.okx.com/api/v5/market/tickers?instType=SPOT';
+  const apiKey = '899fa072-efcb-4a2d-8e13-d276f0116416';
+  const proxyUrl = 'https://your-proxy.workers.dev/'; // استبدلها برابط البروكسي الخاص بك
+  const apiPath = 'api/v5/market/tickers?instType=SPOT';
   
-  // 2. عناصر واجهة المستخدم
-  const gridContainer = document.querySelector('.crypto-grid');
   const loadingMessage = document.querySelector('.loading-message');
   
-  // 3. دالة جلب البيانات
   async function fetchData() {
     try {
-      loadingMessage.textContent = "جارٍ تحميل البيانات...";
+      loadingMessage.textContent = "جارٍ جلب البيانات...";
       
-      const response = await fetch(proxyUrl + apiUrl, {
-        headers: {
-          'X-API-KEY': '899fa072-efcb-4a2d-8e13-d276f0116416',
-          'Origin': 'http://localhost' // مطلوب لبعض خدمات الـ Proxy
-        }
+      const response = await fetch(proxyUrl + apiPath, {
+        headers: { 'X-API-KEY': apiKey }
       });
       
-      if (!response.ok) throw new Error(`خطأ HTTP: ${response.status}`);
-      
       const data = await response.json();
-      console.log("البيانات المستلمة:", data); // للتصحيح
+      if (!data.data) throw new Error("No data received");
       
-      if (!data.data) throw new Error("لا توجد بيانات متاحة");
-      
-      // 4. معالجة البيانات الناجحة
+      // عرض البيانات هنا
+      console.log("البيانات:", data.data);
       loadingMessage.style.display = 'none';
-      processData(data.data);
       
     } catch (error) {
-      console.error("فشل جلب البيانات:", error);
+      console.error("Error:", error);
       loadingMessage.innerHTML = `
         فشل التحميل: ${error.message}
         <button onclick="fetchData()">إعادة المحاولة</button>
       `;
     }
   }
-
-  // 5. تشغيل أولي
+  
   fetchData();
 });
