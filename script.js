@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const filtered = data
           .filter(ticker =>
-            ticker.symbol.endsWith('USDT') &&
-            !stableCoins.includes(ticker.symbol.replace('USDT', '')) &&
+           /^([A-Z]+)USDT$/.test(ticker.symbol) &&
+!stableCoins.includes(ticker.symbol.replace('USDT', ''))
+ &&
             parseFloat(ticker.quoteVolume) > 0
           );
 
