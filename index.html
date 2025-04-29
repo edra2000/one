@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>مراقبة العملات الرقمية</title>
+  <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #222;
+      font-family: 'Arial', sans-serif;
+      background-color: #181818;
       color: #f0f8ff;
       margin: 0;
       padding: 20px;
@@ -22,30 +23,37 @@
     }
     .crypto-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 15px;
     }
     .crypto-card {
-      background-color: #333;
-      padding: 10px;
-      border-radius: 8px;
+      background-color: #2a2a2a;
+      padding: 12px;
+      border-radius: 12px;
       text-align: center;
+      box-shadow: 0 0 8px #00000050;
       transition: transform 0.3s ease;
     }
     .crypto-card:hover {
-      transform: scale(1.05);
+      transform: scale(1.04);
     }
     .symbol {
       font-size: 1.2em;
       font-weight: bold;
+      margin-top: 5px;
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 5px;
     }
     .price {
       font-size: 1.1em;
-      margin: 8px 0;
+      margin: 6px 0;
     }
     .change {
       font-weight: bold;
-      margin-bottom: 8px;
+      margin: 6px 0;
     }
     .positive {
       color: #00ff88;
@@ -55,82 +63,113 @@
     }
     .volume {
       font-size: 0.9em;
-      margin-top: 8px;
+      margin-top: 6px;
+    }
+    .liquidity-chart {
+      width: 60px;
+      height: 60px;
+      margin: 10px auto;
     }
   </style>
 </head>
 <body>
 
-  <div class="loading-message">جارٍ تحميل بيانات العملات...</div>
-  <div class="error-message" style="display:none;"></div>
-  <div class="crypto-grid" style="display:none;"></div>
+<div class="loading-message">جارٍ تحميل البيانات...</div>
+<div class="error-message" style="display:none;"></div>
+<div class="crypto-grid" style="display:none;"></div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const apiUrl = 'http://localhost:3000/api/binance'; // تأكد من تشغيل الخادم
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const apiUrl = 'http://localhost:3000/api/binance';
 
-      const gridContainer = document.querySelector('.crypto-grid');
-      const loadingMessage = document.querySelector('.loading-message');
-      const errorMessage = document.querySelector('.error-message');
+  const gridContainer = document.querySelector('.crypto-grid');
+  const loadingMessage = document.querySelector('.loading-message');
+  const errorMessage = document.querySelector('.error-message');
 
-      function displayError(message) {
+  function displayError(message) {
+    loadingMessage.style.display = 'none';
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+  }
+
+  function fetchAndDisplayData() {
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
         loadingMessage.style.display = 'none';
-        errorMessage.textContent = message;
-        errorMessage.style.display = 'block';
-      }
+        errorMessage.style.display = 'none';
+        gridContainer.style.display = 'grid';
+        gridContainer.innerHTML = '';
 
-      function fetchAndDisplayData() {
-        fetch(apiUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+        const filtered = data
+          .filter(ticker =>
+            ticker.symbol.endsWith('USDT') &&
+            !ticker.symbol.startsWith('USD') &&
+            parseFloat(ticker.quoteVolume) > 0
+          )
+          .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+          .slice(0, 30);
+
+        filtered.forEach(ticker => {
+          const symbol = ticker.symbol.replace('USDT', '');
+          const symbolLower = symbol.toLowerCase();
+          const price = parseFloat(ticker.lastPrice);
+          const change = parseFloat(ticker.priceChangePercent);
+          const volume = parseFloat(ticker.quoteVolume);
+          const liquidity = Math.min(1, volume / 100000000); // نسبة السيولة
+          const containerId = `liq-${symbol}`;
+
+          const card = document.createElement('div');
+          card.className = 'crypto-card';
+          card.innerHTML = `
+            <img class="logo" src="https://cryptoicons.org/api/icon/${symbolLower}/64" onerror="this.style.display='none'" />
+            <div class="symbol">${symbol}</div>
+            <div class="price">${price.toFixed(2)} USD</div>
+            <div class="change ${change >= 0 ? 'positive' : 'negative'}">
+              ${change.toFixed(2)}%
+            </div>
+            <div class="liquidity-chart" id="${containerId}"></div>
+            <div class="volume">الحجم: ${volume.toLocaleString()}</div>
+          `;
+          gridContainer.appendChild(card);
+
+          // مؤشر السيولة
+          const circle = new ProgressBar.Circle(`#${containerId}`, {
+            color: '#00ff88',
+            trailColor: '#444',
+            trailWidth: 2,
+            duration: 1400,
+            easing: 'easeInOut',
+            strokeWidth: 6,
+            text: { autoStyleContainer: false },
+            from: { color: '#00ff88' },
+            to: { color: '#ff3c3c' },
+            step: function (state, circle) {
+              circle.path.setAttribute('stroke', state.color);
+              const value = Math.round(circle.value() * 100);
+              circle.setText(`${value}%`);
             }
-            return response.json();
-          })
-          .then(data => {
-            loadingMessage.style.display = 'none';
-            errorMessage.style.display = 'none';
-            gridContainer.style.display = 'grid';
-            gridContainer.innerHTML = '';
-
-            const filtered = data
-              .filter(ticker =>
-                ticker.symbol.endsWith('USDT') &&
-                !ticker.symbol.startsWith('USD') &&
-                parseFloat(ticker.quoteVolume) > 0
-              )
-              .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-              .slice(0, 30);
-
-            filtered.forEach(ticker => {
-              const price = parseFloat(ticker.lastPrice);
-              const change = parseFloat(ticker.priceChangePercent);
-              const volume = parseFloat(ticker.quoteVolume);
-              const symbol = ticker.symbol.replace('USDT', '');
-
-              const card = document.createElement('div');
-              card.className = 'crypto-card';
-              card.innerHTML = `
-                <div class="symbol">${symbol}</div>
-                <div class="price">${price.toFixed(2)} USD</div>
-                <div class="change ${change >= 0 ? 'positive' : 'negative'}">
-                  ${change.toFixed(2)}%
-                </div>
-                <div class="volume">الحجم: ${volume.toLocaleString()}</div>
-              `;
-              gridContainer.appendChild(card);
-            });
-          })
-          .catch(error => {
-            console.error('خطأ في جلب البيانات:', error);
-            displayError("حدث خطأ أثناء جلب البيانات من Binance.");
           });
-      }
 
-      fetchAndDisplayData();
-      setInterval(fetchAndDisplayData, 10000);
-    });
-  </script>
+          circle.text.style.fontFamily = '"Arial", sans-serif';
+          circle.text.style.fontSize = '14px';
+          circle.text.style.fill = '#f0f8ff';
+          circle.animate(liquidity);
+        });
+      })
+      .catch(error => {
+        console.error('خطأ:', error);
+        displayError("حدث خطأ أثناء جلب البيانات من الخادم.");
+      });
+  }
+
+  fetchAndDisplayData();
+  setInterval(fetchAndDisplayData, 10000);
+});
+</script>
 
 </body>
 </html>
