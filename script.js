@@ -1,5 +1,6 @@
-function drawCircle(retries = 10) {
+function drawCircle(containerId, retries = 10) {
   const container = document.getElementById(containerId);
+
   if (container) {
     const percent = Math.max(0.01, Math.min(1, parseFloat(ticker.vol24h) / 100000000));
     const circle = new ProgressBar.Circle(container, {
@@ -28,10 +29,9 @@ function drawCircle(retries = 10) {
 
     circle.animate(percent);
   } else if (retries > 0) {
-    // إعادة المحاولة إذا لم يتم العثور على العنصر
-    setTimeout(() => drawCircle(retries - 1), 100);
+    // إعادة المحاولة بعد وقت انتظار قصير
+    setTimeout(() => drawCircle(containerId, retries - 1), 100);
   } else {
-    // عرض رسالة خطأ واضحة
-    console.error(`❌ العنصر ${containerId} غير موجود في الصفحة بعد محاولات متعددة.`);
+    console.error(`❌ العنصر ${containerId} غير موجود في DOM بعد عدة محاولات.`);
   }
 }
