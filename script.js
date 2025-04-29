@@ -1,4 +1,4 @@
-(function() {
+document.addEventListener('DOMContentLoaded', function () {
   const apiKey = '899fa072-efcb-4a2d-8e13-d276f0116416';
   const apiUrl = 'https://www.okx.com/api/v5/market/tickers?instType=SPOT&quoteCcy=USDT';
   const stableCoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD', 'PAX'];
@@ -12,25 +12,6 @@
     loadingMessage.style.display = 'none';
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
-  }
-
-  function createLiquidityCircle(container, value) {
-    const circle = new ProgressBar.Circle(container, {
-      color: '#00ff88',
-      trailColor: '#eee',
-      trailWidth: 2,
-      duration: 1500,
-      easing: 'bounce',
-      strokeWidth: 6,
-      from: { color: '#00ff88' },
-      to: { color: '#ff0000' },
-      step: (state, circle) => {
-        circle.path.setAttribute('stroke', state.color);
-        const val = Math.round(circle.value() * 100);
-        circle.setText(val + '%');
-      }
-    });
-    circle.animate(value); // القيمة من 0 إلى 1
   }
 
   function fetchAndDisplayData() {
@@ -75,6 +56,7 @@
 
           sortedCoins.forEach(ticker => {
             const changeValue = parseFloat(ticker.change24h);
+            const coinId = ticker.instId.replace(/[^a-zA-Z0-9]/g, '');
             const card = document.createElement('div');
             card.className = 'crypto-card';
 
@@ -84,17 +66,31 @@
               <div class="change ${changeValue >= 0 ? 'positive' : 'negative'}">
                 ${changeValue.toFixed(2)}%
               </div>
-              <div class="liquidity-chart" id="liquidity-${ticker.instId.replace(/[^a-zA-Z0-9]/g, '')}"></div>
+              <div class="liquidity-chart" id="liquidity-${coinId}"></div>
               <div class="volume">Vol: ${parseFloat(ticker.vol24h).toLocaleString()}</div>
             `;
 
             gridContainer.appendChild(card);
 
-            const liquidityPercent = Math.min(1, parseFloat(ticker.vol24h) / 100000000); // سيولة 100M=ممتاز
-            createLiquidityCircle(
-              document.getElementById(`liquidity-${ticker.instId.replace(/[^a-zA-Z0-9]/g, '')}`),
-              liquidityPercent
-            );
+            // هنا يتم رسم مؤشر السيولة بعد إنشاء العنصر
+            const container = document.getElementById(`liquidity-${coinId}`);
+            const percent = Math.min(1, parseFloat(ticker.vol24h) / 100000000); // سيولة 100M = 100%
+            const circle = new ProgressBar.Circle(container, {
+              color: '#00ff88',
+              trailColor: '#444',
+              trailWidth: 2,
+              duration: 1400,
+              easing: 'easeInOut',
+              strokeWidth: 6,
+              from: { color: '#00ff88' },
+              to: { color: '#ff3c3c' },
+              step: (state, circle) => {
+                circle.path.setAttribute('stroke', state.color);
+                const val = Math.round(circle.value() * 100);
+                circle.setText(val + '%');
+              }
+            });
+            circle.animate(percent);
           });
         } else {
           displayError("لا توجد بيانات أسعار من OKX.");
@@ -107,5 +103,5 @@
   }
 
   fetchAndDisplayData();
-  setInterval(fetchAndDisplayData, 10000); // كل 10 ثواني
-})();
+  setInterval(fetchAndDisplayData, 10000); // تحديث كل 10 ثواني
+});
