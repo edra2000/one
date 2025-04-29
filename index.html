@@ -4,11 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>مراقبة العملات الرقمية</title>
-  <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #181818;
+      font-family: Arial, sans-serif;
+      background-color: #1c1c1c;
       color: #f0f8ff;
       margin: 0;
       padding: 20px;
@@ -27,7 +26,7 @@
       gap: 15px;
     }
     .crypto-card {
-      background-color: #2a2a2a;
+      background-color: #2c2c2c;
       padding: 12px;
       border-radius: 12px;
       text-align: center;
@@ -35,20 +34,19 @@
       transition: transform 0.3s ease;
     }
     .crypto-card:hover {
-      transform: scale(1.04);
-    }
-    .symbol {
-      font-size: 1.2em;
-      font-weight: bold;
-      margin-top: 5px;
+      transform: scale(1.03);
     }
     .logo {
-      width: 40px;
-      height: 40px;
-      margin-bottom: 5px;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 6px;
+    }
+    .symbol {
+      font-size: 1.1em;
+      font-weight: bold;
     }
     .price {
-      font-size: 1.1em;
+      font-size: 1em;
       margin: 6px 0;
     }
     .change {
@@ -65,10 +63,17 @@
       font-size: 0.9em;
       margin-top: 6px;
     }
-    .liquidity-chart {
-      width: 60px;
-      height: 60px;
-      margin: 10px auto;
+    .liquidity-bar {
+      height: 12px;
+      border-radius: 6px;
+      background: #444;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .liquidity-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s ease;
     }
   </style>
 </head>
@@ -81,7 +86,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const apiUrl = 'http://localhost:3000/api/binance';
-
   const gridContainer = document.querySelector('.crypto-grid');
   const loadingMessage = document.querySelector('.loading-message');
   const errorMessage = document.querySelector('.error-message');
@@ -90,6 +94,13 @@ document.addEventListener('DOMContentLoaded', function () {
     loadingMessage.style.display = 'none';
     errorMessage.textContent = message;
     errorMessage.style.display = 'block';
+  }
+
+  function getColor(percent) {
+    if (percent >= 75) return '#00ff88';
+    if (percent >= 50) return '#ffaa00';
+    if (percent >= 25) return '#ff8800';
+    return '#ff4444';
   }
 
   function fetchAndDisplayData() {
@@ -119,45 +130,23 @@ document.addEventListener('DOMContentLoaded', function () {
           const price = parseFloat(ticker.lastPrice);
           const change = parseFloat(ticker.priceChangePercent);
           const volume = parseFloat(ticker.quoteVolume);
-          const liquidity = Math.min(1, volume / 100000000); // نسبة السيولة
-          const containerId = `liq-${symbol}`;
+          const liquidityPercent = Math.min(100, Math.floor((volume / 100000000) * 100));
 
           const card = document.createElement('div');
           card.className = 'crypto-card';
           card.innerHTML = `
-            <img class="logo" src="https://cryptoicons.org/api/icon/${symbolLower}/64" onerror="this.style.display='none'" />
+            <img class="logo" src="https://coinicons-api.vercel.app/api/icon/${symbolLower}" onerror="this.src='https://via.placeholder.com/42'" />
             <div class="symbol">${symbol}</div>
             <div class="price">${price.toFixed(2)} USD</div>
             <div class="change ${change >= 0 ? 'positive' : 'negative'}">
               ${change.toFixed(2)}%
             </div>
-            <div class="liquidity-chart" id="${containerId}"></div>
+            <div class="liquidity-bar">
+              <div class="liquidity-fill" style="width: ${liquidityPercent}%; background: ${getColor(liquidityPercent)};"></div>
+            </div>
             <div class="volume">الحجم: ${volume.toLocaleString()}</div>
           `;
           gridContainer.appendChild(card);
-
-          // مؤشر السيولة
-          const circle = new ProgressBar.Circle(`#${containerId}`, {
-            color: '#00ff88',
-            trailColor: '#444',
-            trailWidth: 2,
-            duration: 1400,
-            easing: 'easeInOut',
-            strokeWidth: 6,
-            text: { autoStyleContainer: false },
-            from: { color: '#00ff88' },
-            to: { color: '#ff3c3c' },
-            step: function (state, circle) {
-              circle.path.setAttribute('stroke', state.color);
-              const value = Math.round(circle.value() * 100);
-              circle.setText(`${value}%`);
-            }
-          });
-
-          circle.text.style.fontFamily = '"Arial", sans-serif';
-          circle.text.style.fontSize = '14px';
-          circle.text.style.fill = '#f0f8ff';
-          circle.animate(liquidity);
         });
       })
       .catch(error => {
